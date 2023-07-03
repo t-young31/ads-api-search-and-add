@@ -11,7 +11,7 @@ def query_response() -> requests.Response:
     """Get a response by querying the ADS database for citations of the ALPS code"""
     response = requests.get(
         url=f"{BASE_URL}/search/query",
-        headers={"Authorization": f"Bearer {os.environ['API_TOKEN']}"},
+        headers={"Authorization": f"Bearer {os.environ['ADS_API_TOKEN']}"},
         params={
             "q": f"citations(bibcode:{ALPS_ADS_BIB_CODE})",  # Query
             "fl": "bibcode",  # Fields to return
@@ -22,7 +22,7 @@ def query_response() -> requests.Response:
 
 
 def bibcodes_from_response(response: requests.Response) -> list:
-    """Given a requests response extract the bibcodes as the unique identifiers"""
+    """Given a requests response extract the bibcode unique identifiers"""
 
     if response.status_code != 200:
         raise RuntimeError(f"Failed to get: {response.url} content:\n{response.content}")
@@ -41,10 +41,11 @@ def bibcodes_from_response(response: requests.Response) -> list:
 
 
 def add_bibcodes_to_library(bibcodes: list, library_id: str) -> None:
+    """Add a list of papers to an ADS library"""
 
     response = requests.post(
         url=f"{BASE_URL}/biblib/documents/{library_id}",
-        headers={"Authorization": f"Bearer {os.environ['API_TOKEN']}"},
+        headers={"Authorization": f"Bearer {os.environ['ADS_API_TOKEN']}"},
         json={"bibcode": bibcodes, "action": "add"}
     )
 
@@ -58,8 +59,8 @@ def add_bibcodes_to_library(bibcodes: list, library_id: str) -> None:
 
 def main() -> None:
 
-    if "API_TOKEN" not in os.environ:
-        raise RuntimeError("Please set API_TOKEN as an environment variable")
+    if "ADS_API_TOKEN" not in os.environ:
+        raise RuntimeError("Please set ADS_API_TOKEN as an environment variable")
 
     add_bibcodes_to_library(
         bibcodes=bibcodes_from_response(query_response()),
